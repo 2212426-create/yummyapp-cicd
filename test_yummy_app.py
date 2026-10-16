@@ -1,3 +1,4 @@
+
 import unittest
 from unittest.mock import patch
 from yummy_app import YummyApp
@@ -30,68 +31,115 @@ class TestEasyLevel(unittest.TestCase):
 
 
 # ================================================================
-# CAP DO 2: Kiem thu chuc nang ap dung ma khuyen mai (apply_promo_code)
+# CAP DO 2: TestMediumLevel - 4 test case bat buoc
 # ================================================================
 class TestMediumLevel(unittest.TestCase):
     """Kiem thu chuc nang ap dung ma khuyen mai"""
 
     def setUp(self):
-        self.app = YummyApp(network_status="online", os_version=15)
+        self.app = YummyApp(
+            network_status="online",
+            os_version=15
+        )
 
+    # TC01: Online - ma giam gia hop le
     def test_apply_promo_code_success(self):
-        """1. Ap dung ma hop le khi online va HDH thoa man"""
-        result = self.app.apply_promo_code(100000, "GIAM10")
+        result = self.app.apply_promo_code(
+            100000, "GIAM10"
+        )
         self.assertEqual(result, 90000.0)
 
+    # TC02: Offline - nem ConnectionError
     def test_apply_promo_code_offline_error(self):
-        """2. Ngoai le khi thiet bi o trang thai offline"""
-        offline_app = YummyApp(network_status="offline", os_version=15)
+        offline_app = YummyApp(
+            network_status="offline",
+            os_version=15
+        )
+
         with self.assertRaises(ConnectionError):
-            offline_app.apply_promo_code(100000, "GIAM10")
+            offline_app.apply_promo_code(
+                100000, "GIAM10"
+            )
 
-    def test_apply_promo_code_invalid_code(self):
-        """3. Ngoai le khi nhap ma khuyen mai khong ton tai"""
-        with self.assertRaises(ValueError):
-            self.app.apply_promo_code(100000, "MA_GIA")
+    # TC03: Ma dac biet tren OS 15 - thanh cong
+    def test_apply_promo_code_special_os15(self):
+        result = self.app.apply_promo_code(
+            100000, "NEW_OS_ONLY"
+        )
+        self.assertEqual(result, 80000.0)
 
+    # TC04: Ma dac biet tren OS 14 - nem ValueError
     def test_apply_promo_code_low_os_version(self):
-        """4. Ngoai le khi phien ban HDH thap hon yeu cau cua ma"""
-        old_os_app = YummyApp(network_status="online", os_version=10)
+        old_os_app = YummyApp(
+            network_status="online",
+            os_version=14
+        )
+
         with self.assertRaises(ValueError):
-            old_os_app.apply_promo_code(100000, "NEW_OS_ONLY")
+            old_os_app.apply_promo_code(
+                100000, "NEW_OS_ONLY"
+            )
+
+    # Test bo sung: Ma khuyen mai khong ton tai
+    def test_apply_promo_code_invalid_code(self):
+        with self.assertRaises(ValueError):
+            self.app.apply_promo_code(
+                100000, "MA_GIA"
+            )
 
 
 # ================================================================
-# CAP DO 3: Kiem thu mo phong GPS service (@patch)
+# CAP DO 3: TestHardLevel - 3 test case Mocking GPS
 # ================================================================
 class TestHardLevel(unittest.TestCase):
-    """Kiem thu dich vu dinh vi GPS bang kü thuat Mocking (@patch)"""
+    """Kiem thu dich vu GPS bang ky thuat Mocking"""
 
     def setUp(self):
         self.app = YummyApp()
 
-    @patch("gps_service.get_current_location")
-    def test_get_nearby_restaurants_success(self, mock_get_location):
-        """1. Lay danh sach nha hang thanh cong khi co toa do GPS"""
+    # TC05: GPS trong vung (10.0, 105.0)
+    @patch("yummy_app.gps_service.get_current_location")
+    def test_get_nearby_restaurants_success(
+        self, mock_get_location
+    ):
         mock_get_location.return_value = (10.0, 105.0)
+
         restaurants = self.app.get_nearby_restaurants()
+
         self.assertEqual(
-            restaurants, ["Nha hang Pho Ly Quoc Su", "Bun cha Huong Lien"]
+            restaurants,
+            [
+                "Nha hang Pho Ly Quoc Su",
+                "Bun cha Huong Lien"
+            ]
         )
 
-    @patch("gps_service.get_current_location")
-    def test_get_nearby_restaurants_signal_lost(self, mock_get_location):
-        """2. Xu ly khi bi mat tin hieu GPS (GPSSignalLostError)"""
-        mock_get_location.side_effect = gps_service.GPSSignalLostError()
-        result = self.app.get_nearby_restaurants()
-        self.assertEqual(result, "Khong the xac dinh vi tri.")
+    # TC06: GPS ngoai vung (20.0, 110.0)
+    @patch("yummy_app.gps_service.get_current_location")
+    def test_get_nearby_restaurants_empty_location(
+        self, mock_get_location
+    ):
+        mock_get_location.return_value = (20.0, 110.0)
 
-    @patch("gps_service.get_current_location")
-    def test_get_nearby_restaurants_empty_location(self, mock_get_location):
-        """3. Toa do khong co nha hang nao"""
-        mock_get_location.return_value = (0.0, 0.0)
         restaurants = self.app.get_nearby_restaurants()
+
         self.assertEqual(restaurants, [])
+
+    # TC07: GPS mat tin hieu
+    @patch("yummy_app.gps_service.get_current_location")
+    def test_get_nearby_restaurants_signal_lost(
+        self, mock_get_location
+    ):
+        mock_get_location.side_effect = (
+            gps_service.GPSSignalLostError()
+        )
+
+        result = self.app.get_nearby_restaurants()
+
+        self.assertEqual(
+            result,
+            "Khong the xac dinh vi tri."
+        )
 
 
 if __name__ == "__main__":
