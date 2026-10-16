@@ -4,5 +4,8 @@ class GPSSignalLostError(Exception):
 
 
 def get_current_location():
-    """Ham mo phong truy cap phan cung GPS dien thoai de lay toa do."""
+    """
+    Ham mo phong truy cap phan cung GPS dien thoai de lay toa do.
+    Trong moi truong kiem thu tu dong, ham nay se duoc dong the (mock).
+    """
     return (10.0, 105.0)
