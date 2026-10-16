@@ -68,7 +68,3 @@ class YummyApp:
 
         except gps_service.GPSSignalLostError:
             return "Khong the xac dinh vi tri."
-
-    # BREAK THE BUILD: Co tinh tao loi cu phap
-    def intentionally_broken_function(
-        return "Break the Build"
